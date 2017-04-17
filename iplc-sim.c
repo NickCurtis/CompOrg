@@ -1,10 +1,6 @@
 /***********************************************************************/
 /***********************************************************************
-<<<<<<< HEAD
- Pipeline Cache Simulator lily's change
-=======
- Pipeline Cache Simulator karina was here
->>>>>>> origin/Test
+ Pipeline Cache Simulator
  ***********************************************************************/
 /***********************************************************************/
 #include <stdio.h>
@@ -250,11 +246,8 @@ void iplc_sim_finalize()
 /*
  * Dump the current contents of our pipeline.
  */
-<<<<<<< HEAD
-void iplc_sim_dump_pipeline_lily()
-=======
-void iplc_sim_dump_pipeline_karina()
->>>>>>> origin/Test
+
+void iplc_sim_dump_pipeline()
 {
     int i;
     
