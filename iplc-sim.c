@@ -250,7 +250,7 @@ void iplc_sim_finalize()
 /*
  * Dump the current contents of our pipeline.
  */
-void iplc_sim_dump_pipeline()
+void iplc_sim_dump_pipeline_lily()
 {
     int i;
     
