@@ -1,6 +1,6 @@
 /***********************************************************************/
 /***********************************************************************
- Pipeline Cache Simulator hungry bois
+ Pipeline Cache Simulator hi
  ***********************************************************************/
 /***********************************************************************/
 #include <stdio.h>
@@ -39,19 +39,16 @@ void iplc_sim_finalize();
 
 typedef struct cache_line
 {
+    int *vdbt;
+    int *tag;
+    int asso;
+    int *replace;
     // Your data structures for implementing your cache should include:
     // a valid bit
     // a tag
     // a method for handling varying levels of associativity
     // a method for selecting which item in the cache is going to be replaced
 } cache_line_t;
-
-typedef struct single_cache_item
-{
-    unsigned int is_valid : 1;
-    unsigned int tag : 2;
-    unsigned int value : 5;
-} cache_item;
 
 cache_line_t *cache = NULL;
 int cache_index = 0;
@@ -174,6 +171,15 @@ void iplc_sim_init(int index, int blocksize, int assoc)
 
     // Dynamically create our cache based on the information the user entered
     for (i = 0; i < (1 << index); i++) {
+        cache[i].vdbt = (int *)malloc((sizeof(int) * assoc));
+        cache[i].tag = (int *)malloc((sizeof(int) * assoc));
+        cache[i].replace = (int *)malloc((sizeof(int) * assoc));
+
+        for (j = 0; j < assoc; j++) {
+            cache[i].vdbt[j] = 0;
+            cache[i].tag[j] = 0;
+            cache[i].replace[j] = j;
+        }
     }
 
     // init the pipeline -- set all data to zero and instructions to NOP
@@ -189,7 +195,17 @@ void iplc_sim_init(int index, int blocksize, int assoc)
  */
 void iplc_sim_LRU_replace_on_miss(int index, int tag)
 {
-    /* You must implement this function */
+    int repl = cache[index].replace[0];
+    //replace everything at least recently used
+    cache[index].vdbt[repl] = 1;
+    cache[index].tag[repl] = tag;
+    cache[index].replace[cache_assoc - 1] = repl;
+
+    for (int j = 0; j < cache_assoc - 1; j++) {
+        //update lru
+        cache[index].replace[j] = cache[index].replace[j + 1];
+    }
+
 }
 
 /*
@@ -198,7 +214,17 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
  */
 void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 {
-    /* You must implement this function */
+    int update = 0;
+    //find update index
+    while (cache[index].replace[update] != assoc_entry) {
+        update++;
+    }
+    //from there, update the lru
+    for (int i = update + 1; i < cache_assoc + 1; i++) {
+        cache[index].replace[i - 1] = cache[index].replace[i];
+    }
+
+    cache[index].replace[cache_assoc - 1] = assoc_entry;
 }
 
 /*
