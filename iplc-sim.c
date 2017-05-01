@@ -270,6 +270,8 @@ int iplc_sim_trap_address(unsigned int address)
         int tag=0;
         int hit=0;
         uint32_t mask;
+        int assoc_bit = cache_assoc / 2;
+        printf("ASSOC_BIT: %d\n", assoc_bit);
 
         //Temporary variable so that we can flip from small endian to big endian
         unsigned int rev_address = 0;
@@ -293,7 +295,7 @@ int iplc_sim_trap_address(unsigned int address)
         index = index >> cache_blockoffsetbits;
         printf("INDEX: %d\n", index);
 
-        mask = 1 << (1 + cache_blockoffsetbits + cache_index + cache_assoc);
+        mask = 1 << (1 + cache_blockoffsetbits + cache_index + assoc_bit);
         mask--;
         printf("MASK FOR TAG: ");
         print_b32(mask);
@@ -302,11 +304,15 @@ int iplc_sim_trap_address(unsigned int address)
 
         print_b32(tag);
 
-        for(i = 0; i < cache_assoc; i++){
-            if ((cache[index].vdbt[i] == 1) && (cache[index].tag[i] == tag))
-                hit = 1;
-                break;
+        if (cache_assoc != 1)
+        {
+            for(i = 0; i < cache_assoc; i++){
+                if ((cache[index].vdbt[i] == 1) && (cache[index].tag[i] == tag))
+                    hit = 1;
+                    break;
+            }
         }
+
 
         cache_access++;
         if (hit == 1){
