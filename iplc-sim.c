@@ -228,6 +228,37 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 }
 
 /*
+ * Extract the least significant bit from the value pointed to by bitbucket.
+ * Remove this bit from the pointed-to value and return it.
+ */
+uint32_t pop_bits(uint32_t *bitbucket)
+{
+    uint32_t bitmask = 1;
+    uint32_t lsb = *bitbucket & bitmask;
+    //printf("least sig bit: %d\n", lsb);
+    *bitbucket = *bitbucket >> 1;
+    //printf("bitbucket: %d\n", *bitbucket);
+    return lsb;
+}
+
+/*
+ * Print out a 32-bit binary string
+ */
+void print_b32(uint32_t s)
+{
+    uint32_t binaryString[32];
+
+    for (int i = 0; i < 32; i++) {
+        binaryString[i] = pop_bits(&s);
+    }
+
+    for (int i = 31; i >= 0; i--) {
+        printf("%d", binaryString[i]);
+    }
+    printf("\n");
+}
+
+/*
  * Check if the address is in our cache.  Update our counter statistics 
  * for cache_access, cache_hit, etc.  If our configuration supports
  * associativity we may need to check through multiple entries for our
