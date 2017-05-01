@@ -214,17 +214,72 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
  */
 void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
 {
-    int update = 0;
-    //find update index
-    while(cache[index].replace[update] != assoc_entry){
-        update++;
+    int i=0, index=0;
+    int tag=0;
+    int hit=0;
+    uint32_t mask;
+
+    //Temporary variable so that we can flip from small endian to big endian
+    unsigned int rev_address = 0;
+
+    for(i = 0; i < 32; i++){
+        if((address & (1 << i))){
+            rev_address |= 1 << (31 - i);  
+        }
     }
-    //from there, update the lru
-    for(int i = update + 1; i < cache_assoc + 1; i++){
-        cache[index].replace[i - 1] = cache[index].replace[i];
+
+    print_b32(address);
+    print_b32(rev_address);
+
+    //Set up a bit mask of 1s the size of cache_index
+    mask = 1 << (1 + cache_blockoffsetbits + cache_index);
+    mask--;
+    printf("MASK FOR INDEX: ");
+    print_b32(mask);
+
+    index = rev_address & mask;
+    index = index >> cache_blockoffsetbits;
+    printf("INDEX: %d\n", index);
+
+    mask = 1 << (1 + cache_blockoffsetbits + cache_index + cache_assoc);
+    mask--;
+    printf("MASK FOR TAG: ");
+    print_b32(mask);
+    tag = rev_address & mask;
+    tag = tag >> (cache_blockoffsetbits + cache_index);
+
+    print_b32(tag);
+
+    for(i = 0; i < cache_assoc; i++){
+        if ((cache[index].vdbt[i] == 1) && (cache[index].tag[i] == tag))
+            hit = 1;
+            break;
     }
+
+    cache_access++;
+    if (hit == 1){
+        cache_hit++;
+        iplc_sim_LRU_update_on_hit(index,i);
+    }
+    else{
+        cache_miss++;
+        iplc_sim_LRU_replace_on_miss(index,tag);
+    }
+
+
+    //printf("ADDRESS: %d\n", address);
+    //printf("cache_index: %d\n",cache_index);
+    //printf("index: %d\n", index);
+    printf("tag: %d\n", tag);
+    //printf("cache_blocksize: %d\n", cache_blocksize);
+    //printf("cache_assoc: %d\n", cache_assoc);
+
+
     
-    cache[index].replace[cache_assoc - 1] = assoc_entry;
+    // Call the appropriate function for a miss or hit
+
+    /* expects you to return 1 for hit, 0 for miss */
+    return hit;
 }
 
 /*
