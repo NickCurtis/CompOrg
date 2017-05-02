@@ -286,31 +286,32 @@ int iplc_sim_trap_address(unsigned int address)
         print_b32(rev_address);
 
         //Set up a bit mask of 1s the size of cache_index
-        mask = 1 << (1 + cache_blockoffsetbits + cache_index);
+        mask = 1 << (cache_blockoffsetbits + cache_index);
         mask--;
         printf("MASK FOR INDEX: ");
         print_b32(mask);
 
-        index = rev_address & mask;
-        index = index >> cache_blockoffsetbits;
+        index = address & mask;
+        index = index >> (cache_blockoffsetbits);
         printf("INDEX: %d\n", index);
 
-        mask = 1 << (1 + cache_blockoffsetbits + cache_index + assoc_bit);
+        mask = 1 << (cache_blockoffsetbits + cache_index + assoc_bit);
         mask--;
         printf("MASK FOR TAG: ");
         print_b32(mask);
-        tag = rev_address & mask;
-        tag = tag >> (cache_blockoffsetbits + cache_index);
+        tag = address & mask;
+        tag = tag >> (cache_blockoffsetbits + cache_index + 1);
 
         print_b32(tag);
 
-        if (cache_assoc != 1)
-        {
-            for(i = 0; i < cache_assoc; i++){
-                if ((cache[index].vdbt[i] == 1) && (cache[index].tag[i] == tag))
-                    hit = 1;
-                    break;
-            }
+
+        printf("index: %d\n", index);
+        printf("tag: %d\n", tag);
+        for(i = 0; i < cache_assoc; i++){
+            printf("i: %d\n", i);
+            if ((cache[index].vdbt[i] == 1) && (cache[index].tag[i] == tag))
+                hit = 1;
+                break;
         }
 
 
@@ -325,10 +326,9 @@ int iplc_sim_trap_address(unsigned int address)
         }
 
 
+
         //printf("ADDRESS: %d\n", address);
         //printf("cache_index: %d\n",cache_index);
-        //printf("index: %d\n", index);
-        printf("tag: %d\n", tag);
         //printf("cache_blocksize: %d\n", cache_blocksize);
         //printf("cache_assoc: %d\n", cache_assoc);
 
