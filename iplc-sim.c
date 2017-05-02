@@ -271,7 +271,7 @@ int iplc_sim_trap_address(unsigned int address)
         int hit=0;
         uint32_t mask;
         int assoc_bit = cache_assoc / 2;
-        printf("ASSOC_BIT: %d\n", assoc_bit);
+        //printf("ASSOC_BIT: %d\n", assoc_bit);
 
         //Temporary variable so that we can flip from small endian to big endian
         unsigned int rev_address = 0;
@@ -282,39 +282,42 @@ int iplc_sim_trap_address(unsigned int address)
             }
         }
 
-        print_b32(address);
-        print_b32(rev_address);
+        //printf("ADRRESS: ");
+        //print_b32(address);
+        //print_b32(rev_address);
 
         //Set up a bit mask of 1s the size of cache_index
         mask = 1 << (cache_blockoffsetbits + cache_index);
         mask--;
-        printf("MASK FOR INDEX: ");
-        print_b32(mask);
+        //printf("MASK FOR INDEX: ");
+        //print_b32(mask);
 
         index = address & mask;
         index = index >> (cache_blockoffsetbits);
-        printf("INDEX: %d\n", index);
+        //printf("INDEX: %d\n", index);
 
-        mask = 1 << (cache_blockoffsetbits + cache_index + assoc_bit);
+        mask = 1 << (cache_blockoffsetbits + cache_index + cache_assoc + 16);
         mask--;
-        printf("MASK FOR TAG: ");
-        print_b32(mask);
+        //printf("MASK FOR TAG: ");
+        //print_b32(mask);
         tag = address & mask;
-        tag = tag >> (cache_blockoffsetbits + cache_index + 1);
+        //printf("TAG AFTER: ");
+        //print_b32(tag);
+        tag = tag >> (cache_blockoffsetbits + cache_index);
 
-        print_b32(tag);
+        //print_b32(tag);
 
 
-        printf("index: %d\n", index);
-        printf("tag: %d\n", tag);
+        //printf("index: %d\n", index);
+        //printf("tag: %d\n", tag);
         for(i = 0; i < cache_assoc; i++){
-            printf("i: %d\n", i);
+            //printf("i: %d\n", i);
             if ((cache[index].vdbt[i] == 1) && (cache[index].tag[i] == tag))
                 hit = 1;
                 break;
         }
 
-
+        printf("Address %x: Tag= %x, Index= %x\n", address,tag,index);
         cache_access++;
         if (hit == 1){
             cache_hit++;
