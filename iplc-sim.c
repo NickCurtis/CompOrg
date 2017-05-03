@@ -195,19 +195,16 @@ void iplc_sim_init(int index, int blocksize, int assoc)
  */
 void iplc_sim_LRU_replace_on_miss(int index, int tag)
 {
-
     int repl = cache[index].replace[0];
-    
     //replace everything at least recently used
     cache[index].vdbt[repl] = 1;
     cache[index].tag[repl] = tag;
     cache[index].replace[cache_assoc - 1] = repl;
-
+    
     for(int j = 0; j < cache_assoc - 1; j++){
         //update lru
         cache[index].replace[j] = cache[index].replace[j + 1];
     }
-
 
 }
 
@@ -367,15 +364,16 @@ void iplc_sim_push_pipeline_stage()
     //now to count stalls and misses
     int nopes = 0;
     int misses = 0;
+    int dhit = 1;
 
     /* 2. Check for BRANCH and correct/incorrect Branch Prediction */
     if (pipeline[DECODE].itype == BRANCH) {
-        int branch_taken = 1;
+        int branch_taken = 0;
         branch_count++;
 
-        if(pipeline[FETCH].instruction_address ==
+        if(pipeline[FETCH].instruction_address >
             (pipeline[DECODE].instruction_address + 4)){
-            branch_taken = 0;
+            branch_taken = 1;
         }
         if(branch_predict_taken == branch_taken){
             correct_branch_predictions++;
@@ -395,24 +393,27 @@ void iplc_sim_push_pipeline_stage()
              pipeline[ALU].stage.rtype.reg1 ||
             pipeline[MEM].stage.lw.dest_reg == 
             pipeline[ALU].stage.rtype.reg2_or_constant)) {
-            nopes++;
-        }else if (pipeline[ALU].itype == BRANCH &&
+            nopes = 1;
+        }
+
+        if (pipeline[ALU].itype == BRANCH &&
             (pipeline[MEM].stage.lw.dest_reg == 
                 pipeline[ALU].stage.branch.reg1 ||
             pipeline[MEM].stage.lw.dest_reg == 
             pipeline[ALU].stage.branch.reg2)){
-            nopes++;
+            nopes = 1;
         }
 
         //now check for hits or misses
-        if(iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address)){
+        dhit = iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address);
+        if(dhit){
             //this is a hit
             printf("DATA HIT:\t Address 0x%x \n", pipeline[MEM].stage.lw.data_address);
         }else{
             //miss
             printf("DATA MISS:\t Address 0x%x \n", pipeline[MEM].stage.lw.data_address);
             //miss penalty
-            pipeline_cycles += 10;
+            pipeline_cycles += CACHE_MISS_DELAY;
             misses++;
         }
     }
@@ -420,14 +421,15 @@ void iplc_sim_push_pipeline_stage()
     /* 4. Check for SW mem acess and data miss .. add delay cycles if needed */
     if (pipeline[MEM].itype == SW) {
         //another hit miss check
-        if(iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address)){
+        dhit = dhit && iplc_sim_trap_address(pipeline[MEM].stage.lw.data_address);
+        if(dhit){
             //hit
             printf("DATA HIT:\t Address 0x%x \n", pipeline[MEM].stage.lw.data_address);
         }else{
             //miss
             printf("DATA MISS:\t Address 0x%x \n", pipeline[MEM].stage.lw.data_address);
             //penalties
-            pipeline_cycles += 10;
+            pipeline_cycles += CACHE_MISS_DELAY;
             misses++;
         }
     }
