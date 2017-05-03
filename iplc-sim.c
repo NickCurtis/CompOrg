@@ -195,7 +195,9 @@ void iplc_sim_init(int index, int blocksize, int assoc)
  */
 void iplc_sim_LRU_replace_on_miss(int index, int tag)
 {
+
     int repl = cache[index].replace[0];
+    
     //replace everything at least recently used
     cache[index].vdbt[repl] = 1;
     cache[index].tag[repl] = tag;
@@ -205,6 +207,7 @@ void iplc_sim_LRU_replace_on_miss(int index, int tag)
         //update lru
         cache[index].replace[j] = cache[index].replace[j + 1];
     }
+
 
 }
 
@@ -220,42 +223,11 @@ void iplc_sim_LRU_update_on_hit(int index, int assoc_entry)
         update++;
     }
     //from there, update the lru
-    for(int i = update + 1; i < cache_assoc + 1; i++){
+    for(int i = update + 1; i < cache_assoc; i++){
         cache[index].replace[i - 1] = cache[index].replace[i];
     }
     
     cache[index].replace[cache_assoc - 1] = assoc_entry;
-}
-
-/*
- * Extract the least significant bit from the value pointed to by bitbucket.
- * Remove this bit from the pointed-to value and return it.
- */
-uint32_t pop_bits(uint32_t *bitbucket)
-{
-    uint32_t bitmask = 1;
-    uint32_t lsb = *bitbucket & bitmask;
-    //printf("least sig bit: %d\n", lsb);
-    *bitbucket = *bitbucket >> 1;
-    //printf("bitbucket: %d\n", *bitbucket);
-    return lsb;
-}
-
-/*
- * Print out a 32-bit binary string
- */
-void print_b32(uint32_t s)
-{
-    uint32_t binaryString[32];
-
-    for (int i = 0; i < 32; i++) {
-        binaryString[i] = pop_bits(&s);
-    }
-
-    for (int i = 31; i >= 0; i--) {
-        printf("%d", binaryString[i]);
-    }
-    printf("\n");
 }
 
 /*
@@ -269,7 +241,7 @@ int iplc_sim_trap_address(unsigned int address)
     int i=0, index=0;
         int tag=0;
         int hit=0;
-        uint32_t mask;
+        unsigned int mask;
         //If assoc is 4 then it needs 2 bits, 2 needs 1 bit, etc. so floor divide here
         int assoc_bit = cache_assoc / 2;
 
@@ -296,7 +268,6 @@ int iplc_sim_trap_address(unsigned int address)
                 hit = 1;
                 break;
         }
-
 
         printf("Address %x: Tag= %x, Index= %x\n", address,tag,index);
         cache_access++;//Cache will always be accessed whether hit or miss
