@@ -242,8 +242,6 @@ int iplc_sim_trap_address(unsigned int address)
         int tag=0;
         int hit=0;
         unsigned int mask;
-        //If assoc is 4 then it needs 2 bits, 2 needs 1 bit, etc. so floor divide here
-        int assoc_bit = cache_assoc / 2;
 
         //Set up a bit mask of 1s the size of cache_index
         mask = 1 << (cache_blockoffsetbits + cache_index);
